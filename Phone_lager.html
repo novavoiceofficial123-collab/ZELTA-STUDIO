@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aditya Pro Studio - 14K Monster Edition</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        body { background-color: #0a0a0a; color: #fff; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        /* LOGIN */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: #1a1a1a; padding: 30px; border-radius: 12px; text-align: center; width: 90%; max-width: 350px; border: 1px solid #00ff88; box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); }
+        .login-box h2 { color: #00ff88; margin-bottom: 20px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; background: #222; border: 1px solid #444; color: white; border-radius: 6px; }
+        .login-box button { width: 100%; padding: 12px; background: #00ff88; color: #000; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; margin-bottom: 10px;}
+        
+        /* TABS */
+        .tabs { display: flex; gap: 5px; width: 100%; max-width: 600px; margin-top: 15px; padding: 0 15px;}
+        .tab-btn { flex: 1; padding: 12px 5px; border: none; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; background: #222; color: #888; transition: 0.3s; }
+        .tab-btn.active { background: #00ff88; color: #000; box-shadow: 0 0 10px rgba(0, 255, 136, 0.5); }
+
+        /* EDITOR */
+        #app-container { display: none; width: 100%; max-width: 600px; padding: 15px; }
+        .editor-container { background: #151515; padding: 20px; border-radius: 12px; box-shadow: 0 5px 20px rgba(0,0,0,0.8); border: 1px solid #222; display: none; }
+        .editor-container.active { display: block; }
+        
+        h2.title { text-align: center; color: #00ff88; margin-bottom: 15px; }
+        .section-title { font-size: 13px; color: #00ff88; margin: 15px 0 10px; border-bottom: 1px solid #333; padding-bottom: 5px; text-transform: uppercase; letter-spacing: 1px;}
+        
+        .upload-btn { background: #222; color: #fff; padding: 12px; border: 1px dashed #00ff88; border-radius: 8px; text-align: center; font-weight: bold; display: block; cursor: pointer; margin-bottom: 15px; transition: 0.3s; }
+        .upload-btn:hover { background: #00ff88; color: #000; }
+        input[type="file"] { display: none; }
+        
+        select, input[type="number"], input[type="color"], input[type="url"], input[type="text"], input[type="password"] { background: #222; color: white; border: 1px solid #444; padding: 10px; border-radius: 6px; width: 100%; font-size: 14px; outline: none; margin-bottom:10px; }
+        .controls-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; background: #1a1a1a; padding: 15px; border-radius: 8px; }
+        .control-group label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: #aaa;}
+        input[type="range"] { width: 100%; accent-color: #00ff88; }
+        
+        .preview-box { width: 100%; background: #000; border-radius: 8px; margin-bottom: 15px; display: flex; justify-content: center; align-items: center; position: relative; border: 1px solid #333;}
+        canvas { max-width: 100%; max-height: 400px; display: none; border-radius: 8px; }
+        video { display: none; }
+
+        .timeline-container { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; }
+        
+        .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        button.action-btn { flex: 1; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; color: white; transition: 0.3s; min-width: 120px;}
+        .btn-play { background: #1e90ff; }
+        .btn-export { background: #00cc66; font-size: 15px; }
+        .btn-export-vid { background: #ff3366; font-size: 15px; }
+        .btn-export:disabled, .btn-export-vid:disabled { background: #333; color: #777; cursor: not-allowed;}
+
+        .memories-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 15px; }
+        .memory-card { background: #222; border-radius: 8px; padding: 10px; text-align: center; border: 1px solid #333; }
+        .memory-card img { width: 100%; border-radius: 6px; margin-bottom: 8px; object-fit: cover; height: 100px; border: 1px solid #444;}
+        .memory-tag { font-size: 12px; font-weight: bold; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-bottom: 5px; }
+        .tag-photo { background: #1e90ff; color: white; }
+        .tag-video { background: #ff3366; color: white; }
+        .memory-date { font-size: 10px; color: #aaa; }
+    </style>
+</head>
+<body>
+
+    <!-- LOGIN / REGISTER -->
+    <div id="login-screen">
+        <div class="login-box">
+            <h2>Aditya Studio (14K)</h2>
+            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Enter name & password to Login / Register</p>
+            <input type="text" id="login-user" placeholder="Your Name">
+            <input type="password" id="login-pass" placeholder="Secret Password">
+            <button id="login-btn">Login / Sign Up</button>
+            <p id="login-error" style="color:#ff3333; font-size:12px; margin-top:10px; display:none;"></p>
+        </div>
+    </div>
+
+    <div id="app-container">
+        <!-- TABS -->
+        <div class="tabs">
+            <button class="tab-btn active" id="tabPhoto">🖼️ Photo</button>
+            <button class="tab-btn" id="tabVideo">🎥 Video</button>
+            <button class="tab-btn" id="tabMemories" style="background: #2a2a2a; border: 1px solid #00ff88; color: #00ff88;">🕰️ Memories</button>
+        </div>
+
+        <!-- ================= OLD MEMORIES SECTION ================= -->
+        <div class="editor-container" id="memoriesMode">
+            <h2 class="title">My Old Memories</h2>
+            <p style="text-align:center; font-size:12px; color:#aaa;">Welcome <span id="display-user" style="color:#00ff88; font-weight:bold;">User</span>!</p>
+            <div class="memories-grid" id="memories-container"></div>
+            <button id="clear-memories" class="action-btn" style="background:#ff3333; width:100%; margin-top:20px;">🗑️ Clear All Memories</button>
+            <button id="logout-btn" class="action-btn" style="background:#444; width:100%; margin-top:10px;">🚪 Logout</button>
+        </div>
+
+        <!-- ================= PHOTO EDITOR ================= -->
+        <div class="editor-container active" id="photoMode">
+            <h2 class="title">Photo Status Pro (14K)</h2>
+            <label for="p-upload" class="upload-btn">📁 Upload Photo</label>
+            <input type="file" id="p-upload" accept="image/*">
+
+            <div class="preview-box"><canvas id="p-canvas"></canvas></div>
+            <button id="p-play" class="action-btn btn-play" style="width:100%; margin-bottom:10px;">▶ Preview</button>
+
+            <!-- 14K MONSTER QUALITY -->
+            <div class="section-title">✨ Quality & Size (Monster Mode)</div>
+            <select id="p-quality">
+                <option value="original">Original Size</option>
+                <option value="16:9">Standard (16:9 - 1280x720)</option>
+                <option value="shorts">Reels / Shorts (720x1280)</option>
+                <option value="1080p">FHD (1920x1080)</option>
+                <option value="2k">2K HD (2560x1440)</option>
+                <option value="4k">4K Ultra (3840x2160)</option>
+                <option value="8k">8K Beast (7680x4320)</option>
+                <option value="14k" style="color:#ff0055; font-weight:bold;">⚡ 14K Monster Mode (14336x8064)</option>
+            </select>
+
+            <div class="section-title">⏱️ Status Length (Duration)</div>
+            <div class="controls-grid">
+                <div class="control-group"><label>Length (Sec)</label><input type="number" id="p-duration" value="10" min="1"></div>
+            </div>
+
+            <div class="section-title">🌟 Sticker & Shape Mask</div>
+            <label for="p-sticker" class="upload-btn" style="border-color:#ff3366; padding:8px;">🖼️ Add Sticker</label>
+            <input type="file" id="p-sticker" accept="image/*">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Shape</label>
+                    <select id="p-shape">
+                        <option value="square">⬛ Square</option>
+                        <option value="circle">⏺ Circle</option>
+                        <option value="triangle">🔺 Triangle</option>
+                        <option value="line">📏 Line</option>
+                    </select>
+                </div>
+                <div class="control-group"><label>Size</label><input type="range" id="p-st-size" min="10" max="500" value="100"></div>
+                <div class="control-group"><label>X Pos</label><input type="range" id="p-st-x" min="0" max="100" value="10"></div>
+                <div class="control-group"><label>Y Pos</label><input type="range" id="p-st-y" min="0" max="100" value="10"></div>
+            </div>
+
+            <div class="section-title">🎙️ Voiceover & Music Link</div>
+            <button id="p-mic-btn" class="upload-btn" style="border-color:#ff9900; color:#ff9900; padding:8px;">🎤 Record Voiceover</button>
+            <audio id="p-mic-audio" controls style="display:none; width:100%; margin-bottom:10px;"></audio>
+            
+            <label for="p-audio" class="upload-btn" style="border-color:#1e90ff; padding:8px; margin-bottom:5px;">🎶 Select BGM (File)</label>
+            <input type="file" id="p-audio" accept="audio/*">
+            
+            <div class="controls-grid">
+                <div class="control-group"><label>Spectrum</label><select id="p-spectrum"><option value="off">OFF</option><option value="on">ON</option></select></div>
+                <div class="control-group"><label>Color</label><input type="color" id="p-spec-color" value="#00ff88" style="padding:0; height:35px;"></div>
+            </div>
+
+            <div class="btn-group">
+                <button id="p-export-img" class="action-btn btn-export">💾 Save Image (14K)</button>
+                <button id="p-export-vid" class="action-btn btn-export-vid">🎬 Save Video (14K)</button>
+            </div>
+        </div>
+
+        <!-- ================= VIDEO EDITOR ================= -->
+        <div class="editor-container" id="videoMode">
+            <h2 class="title">Video Pro Studio (14K)</h2>
+            <label for="v-upload" class="upload-btn">📁 Upload Main Video</label>
+            <input type="file" id="v-upload" accept="video/*">
+
+            <div class="preview-box"><canvas id="v-canvas"></canvas></div>
+            <video id="v-video"></video>
+
+            <div class="timeline-container">
+                <button id="v-play" class="action-btn btn-play" style="flex:0.3;">▶ Play</button>
+                <input type="range" id="v-progress" min="0" max="100" value="0">
+            </div>
+
+            <!-- 14K MONSTER QUALITY -->
+            <div class="section-title">✨ Quality & Size (Monster Mode)</div>
+            <select id="v-quality">
+                <option value="original">Original Size</option>
+                <option value="16:9">Standard (16:9 - 1280x720)</option>
+                <option value="shorts">Reels / Shorts (720x1280)</option>
+                <option value="1080p">FHD (1920x1080)</option>
+                <option value="2k">2K HD (2560x1440)</option>
+                <option value="4k">4K Ultra (3840x2160)</option>
+                <option value="8k">8K Beast (7680x4320)</option>
+                <option value="14k" style="color:#ff0055; font-weight:bold;">⚡ 14K Monster Mode (14336x8064)</option>
+            </select>
+
+            <div class="section-title">✂️ Cut & Split Overview</div>
+            <div class="controls-grid">
+                <div class="control-group" style="grid-column: span 2;">
+                    <label>Edit Mode</label>
+                    <select id="v-trim-mode" style="border-color:#ff3366;">
+                        <option value="keep">✂️ Keep Selected Area (Trim)</option>
+                        <option value="delete">🗑️ Delete Selected Area (Cut Middle)</option>
+                    </select>
+                </div>
+                <div class="control-group"><label>Start (Sec)</label><input type="number" id="v-start" value="0" step="0.1" min="0"></div>
+                <div class="control-group"><label>End (Sec)</label><input type="number" id="v-end" value="0" step="0.1" min="0"></div>
+            </div>
+
+            <div class="section-title">🌟 Sticker & Shape Mask</div>
+            <label for="v-sticker" class="upload-btn" style="border-color:#ff3366; padding:8px;">🖼️ Add Sticker</label>
+            <input type="file" id="v-sticker" accept="image/*">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>Shape</label>
+                    <select id="v-shape">
+                        <option value="square">⬛ Square</option>
+                        <option value="circle">⏺ Circle</option>
+                        <option value="triangle">🔺 Triangle</option>
+                        <option value="line">📏 Line</option>
+                    </select>
+                </div>
+                <div class="control-group"><label>Size</label><input type="range" id="v-st-size" min="10" max="500" value="100"></div>
+                <div class="control-group"><label>X Pos</label><input type="range" id="v-st-x" min="0" max="100" value="10"></div>
+                <div class="control-group"><label>Y Pos</label><input type="range" id="v-st-y" min="0" max="100" value="10"></div>
+            </div>
+
+            <div class="section-title">🎙️ Voiceover & Audio</div>
+            <button id="v-mic-btn" class="upload-btn" style="border-color:#ff9900; color:#ff9900; padding:8px;">🎤 Record Voiceover</button>
+            <audio id="v-mic-audio" controls style="display:none; width:100%; margin-bottom:10px;"></audio>
+
+            <label for="v-audio" class="upload-btn" style="border-color:#1e90ff; padding:8px; margin-bottom:5px;">🎶 Background Music (File)</label>
+            <input type="file" id="v-audio" accept="audio/*">
+            
+            <div class="controls-grid">
+                <div class="control-group"><label>Spectrum</label><select id="v-spectrum"><option value="off">OFF</option><option value="on">ON</option></select></div>
+                <div class="control-group"><label>Color</label><input type="color" id="v-spec-color" value="#00ff88" style="padding:0; height:35px;"></div>
+            </div>
+
+            <div class="btn-group">
+                <button id="v-export" class="action-btn btn-export" disabled>💾 Export 14K Video</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- MEMORY STORAGE LOGIC ---
+        let currentUser = '';
+        function saveMemory(type, canvasElement) {
+            if(!currentUser) return;
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 150; tempCanvas.height = (canvasElement.height / canvasElement.width) * 150;
+            tempCanvas.getContext('2d').drawImage(canvasElement, 0, 0, tempCanvas.width, tempCanvas.height);
+            let memories = JSON.parse(localStorage.getItem('aditya_studio_memories_' + currentUser)) || [];
+            memories.unshift({ type: type, date: new Date().toLocaleString(), thumb: tempCanvas.toDataURL('image/jpeg', 0.4) });
+            if(memories.length > 10) memories.pop();
+            localStorage.setItem('aditya_studio_memories_' + currentUser, JSON.stringify(memories));
+            loadMemories(); 
+        }
+
+        function loadMemories() {
+            const container = document.getElementById('memories-container');
+            let memories = JSON.parse(localStorage.getItem('aditya_studio_memories_' + currentUser)) || [];
+            container.innerHTML = memories.length ? '' : `<p style="grid-column: span 2; text-align: center; color: #777;">No memories yet for ${currentUser}!</p>`;
+            memories.forEach(mem => {
+                let tagClass = mem.type === 'Video' ? 'tag-video' : 'tag-photo';
+                container.innerHTML += `<div class="memory-card"><img src="${mem.thumb}"><div class="memory-tag ${tagClass}">${mem.type}</div><div class="memory-date">${mem.date}</div></div>`;
+            });
+        }
+
+        document.getElementById('clear-memories').addEventListener('click', () => {
+            if(confirm("Delete all memories?")) { localStorage.removeItem('aditya_studio_memories_' + currentUser); loadMemories(); }
+        });
+
+        // --- LOGIN ---
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const u = document.getElementById('login-user').value.trim().toLowerCase();
+            const p = document.getElementById('login-pass').value;
+            const errorMsg = document.getElementById('login-error');
+
+            if (!u || !p) { errorMsg.innerText = "Enter Name & Password!"; errorMsg.style.display = 'block'; return; }
+
+            let usersData = JSON.parse(localStorage.getItem('aditya_studio_users')) || {};
+            if (usersData[u]) {
+                if (usersData[u] === p) { loginSuccess(u); } 
+                else { errorMsg.innerText = "Wrong Password!"; errorMsg.style.display = 'block'; }
+            } else {
+                usersData[u] = p;
+                localStorage.setItem('aditya_studio_users', JSON.stringify(usersData));
+                loginSuccess(u);
+            }
+        });
+
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            currentUser = '';
+            document.getElementById('login-user').value = ''; document.getElementById('login-pass').value = '';
+            document.getElementById('login-screen').style.display = 'flex'; document.getElementById('app-container').style.display = 'none';
+        });
+
+        function loginSuccess(username) {
+            currentUser = username; document.getElementById('display-user').innerText = username.toUpperCase();
+            document.getElementById('login-error').style.display = 'none'; loadMemories();
+            document.getElementById('login-screen').style.display = 'none'; document.getElementById('app-container').style.display = 'block';
+        }
+
+        // --- TABS ---
+        function switchTab(activeBtnId, activeContainerId) {
+            ['tabPhoto', 'tabVideo', 'tabMemories'].forEach(id => { document.getElementById(id).classList.remove('active'); if(id === 'tabMemories') document.getElementById(id).style.background = '#2a2a2a'; });
+            ['photoMode', 'videoMode', 'memoriesMode'].forEach(id => document.getElementById(id).classList.remove('active'));
+            let activeBtn = document.getElementById(activeBtnId);
+            activeBtn.classList.add('active');
+            if(activeBtnId === 'tabMemories') activeBtn.style.background = '#00ff88'; 
+            document.getElementById(activeContainerId).classList.add('active');
+        }
+        document.getElementById('tabPhoto').addEventListener('click', () => switchTab('tabPhoto', 'photoMode'));
+        document.getElementById('tabVideo').addEventListener('click', () => switchTab('tabVideo', 'videoMode'));
+        document.getElementById('tabMemories').addEventListener('click', () => { switchTab('tabMemories', 'memoriesMode'); loadMemories(); });
+
+        // --- DRAWING SHAPES ---
+        function drawShape(ctx, shape, x, y, size) {
+            ctx.beginPath();
+            if (shape === 'circle') { ctx.arc(x + size/2, y + size/2, size/2, 0, Math.PI * 2); } 
+            else if (shape === 'triangle') { ctx.moveTo(x + size/2, y); ctx.lineTo(x + size, y + size); ctx.lineTo(x, y + size); } 
+            else if (shape === 'line') { ctx.rect(x, y, size/3, size); } 
+            else { ctx.rect(x, y, size, size); }
+            ctx.closePath();
+        }
+
+        // --- AUDIO ENGINE ---
+        let audioCtx, analyser, dataArray;
+        function initAudioEngine(audioElement) {
+            if(!audioCtx && audioElement.src) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioCtx.createAnalyser(); analyser.fftSize = 64;
+                dataArray = new Uint8Array(analyser.frequencyBinCount);
+                const source = audioCtx.createMediaElementSource(audioElement);
+                source.connect(analyser); analyser.connect(audioCtx.destination);
+            }
+            if(audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        // --- MIC RECORDING ---
+        function setupMicRecording(btnId, audioId) {
+            let micRecorder, micChunks = [];
+            const btn = document.getElementById(btnId);
+            const audioEl = document.getElementById(audioId);
+            btn.addEventListener('click', async () => {
+                if(!micRecorder || micRecorder.state === 'inactive') {
+                    try {
+                        const stream = await navigator.mediaDevices.getUserMedia({audio: true});
+                        micRecorder = new MediaRecorder(stream);
+                        micRecorder.ondataavailable = e => micChunks.push(e.data);
+                        micRecorder.onstop = () => {
+                            const blob = new Blob(micChunks, {type: 'audio/webm'});
+                            audioEl.src = URL.createObjectURL(blob);
+                            audioEl.style.display = 'block';
+                            btn.innerText = "🎤 Re-record Voice"; btn.style.background = "#222";
+                            micChunks = [];
+                        };
+                        micRecorder.start();
+                        btn.innerText = "⏹ Stop Rec..."; btn.style.background = "#ff3333";
+                    } catch(err) { alert("Mic permission denied!"); }
+                } else { micRecorder.stop(); }
+            });
+        }
+        setupMicRecording('p-mic-btn', 'p-mic-audio');
+        setupMicRecording('v-mic-btn', 'v-mic-audio');
+
+        // ================= PHOTO MODE =================
+        const pCanvas = document.getElementById('p-canvas'); const pCtx = pCanvas.getContext('2d');
+        let pImg = new Image(), pSticker = new Image(), pAudio = new Audio();
+        let isPPlaying = false;
+
+        document.getElementById('p-upload').addEventListener('change', (e) => {
+            if(e.target.files[0]) { pImg.src = URL.createObjectURL(e.target.files[0]); pImg.onload = () => { pCanvas.style.display = "block"; setPQuality(); } }
+        });
+        document.getElementById('p-sticker').addEventListener('change', (e) => {
+            if(e.target.files[0]) { pSticker.src = URL.createObjectURL(e.target.files[0]); pSticker.onload = () => drawPhotoFrame(); }
+        });
+        document.getElementById('p-audio').addEventListener('change', (e) => {
+            if(e.target.files[0]) pAudio.src = URL.createObjectURL(e.target.files[0]);
+        });
+
+        document.getElementById('p-quality').addEventListener('change', setPQuality);
+        function setPQuality() {
+            if(!pImg.src) return;
+            const q = document.getElementById('p-quality').value;
+            if (q === '16:9') { pCanvas.width = 1280; pCanvas.height = 720; }
+            else if (q === '1080p') { pCanvas.width = 1920; pCanvas.height = 1080; }
+            else if (q === 'shorts') { pCanvas.width = 720; pCanvas.height = 1280; }
+            else if (q === '2k') { pCanvas.width = 2560; pCanvas.height = 1440; }
+            else if (q === '4k') { pCanvas.width = 3840; pCanvas.height = 2160; }
+            else if (q === '8k') { pCanvas.width = 7680; pCanvas.height = 4320; }
+            else if (q === '14k') { pCanvas.width = 14336; pCanvas.height = 8064; }
+            else { pCanvas.width = pImg.width; pCanvas.height = pImg.height; }
+            drawPhotoFrame();
+        }
+
+        document.getElementById('p-play').addEventListener('click', () => {
+            if(!pImg.src) return;
+            initAudioEngine(pAudio);
+            let mic = document.getElementById('p-mic-audio');
+            if(isPPlaying) { 
+                pAudio.pause(); if(mic.src) mic.pause(); 
+                isPPlaying = false; document.getElementById('p-play').innerText = "▶ Preview"; 
+            } else { 
+                if(pAudio.src) pAudio.play(); if(mic.src) { mic.currentTime = 0; mic.play(); }
+                isPPlaying = true; document.getElementById('p-play').innerText = "⏸ Pause"; drawPhotoFrame(); 
+            }
+        });
+
+        ['p-shape','p-st-size','p-st-x','p-st-y','p-spectrum','p-spec-color'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => { if(!isPPlaying) drawPhotoFrame(); });
+        });
+
+        function drawPhotoFrame() {
+            if(!pImg.src) return;
+            pCtx.fillStyle = "#000"; pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
+            const ratio = Math.max(pCanvas.width / pImg.width, pCanvas.height / pImg.height);
+            const w = pImg.width * ratio; const h = pImg.height * ratio;
+            pCtx.drawImage(pImg, 0, 0, pImg.width, pImg.height, (pCanvas.width - w)/2, (pCanvas.height - h)/2, w, h);
+
+            const shape = document.getElementById('p-shape').value;
+            if (pSticker.src) {
+                pCtx.save();
+                const sSize = parseInt(document.getElementById('p-st-size').value);
+                const xPos = (parseInt(document.getElementById('p-st-x').value) / 100) * pCanvas.width;
+                const yPos = (parseInt(document.getElementById('p-st-y').value) / 100) * pCanvas.height;
+                drawShape(pCtx, shape, xPos, yPos, sSize); pCtx.clip(); pCtx.drawImage(pSticker, xPos, yPos, sSize, sSize); pCtx.restore();
+            }
+
+            if (document.getElementById('p-spectrum').value === 'on' && analyser && isPPlaying) {
+                analyser.getByteFrequencyData(dataArray);
+                let numBars = 32; let spacing = 6;
+                let sqSize = Math.max(2, Math.floor(pCanvas.width / numBars) - spacing);
+                pCtx.fillStyle = document.getElementById('p-spec-color').value;
+
+                for (let i = 0; i < numBars; i++) {
+                    let freq = dataArray[i]; 
+                    let numBlocks = Math.floor((freq / 255) * 8); 
+                    for (let j = 0; j < numBlocks; j++) {
+                        let x = i * (sqSize + spacing) + (spacing / 2); let y = pCanvas.height - (j * (sqSize + spacing)) - sqSize - 20;
+                        drawShape(pCtx, shape, x, y, sqSize); pCtx.fill();
+                    }
+                }
+            }
+            if (isPPlaying) requestAnimationFrame(drawPhotoFrame);
+        }
+
+        document.getElementById('p-export-img').addEventListener('click', () => {
+            if(!pImg.src) return; drawPhotoFrame(); saveMemory('Photo', pCanvas); 
+            const a = document.createElement('a'); a.download = 'Aditya-14K-Photo.png'; a.href = pCanvas.toDataURL('image/png', 0.9); a.click();
+        });
+
+        document.getElementById('p-export-vid').addEventListener('click', () => {
+            if(!pImg.src) return;
+            const btn = document.getElementById('p-export-vid'); btn.innerText = "⏳ 14K Exporting..."; btn.disabled = true;
+            initAudioEngine(pAudio); drawPhotoFrame(); saveMemory('Video', pCanvas); 
+            
+            try {
+                const stream = pCanvas.captureStream(30);
+                const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+                let chunks = []; 
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = () => {
+                    isPPlaying = false; document.getElementById('p-play').innerText = "▶ Preview";
+                    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob(chunks, { type: 'video/webm' })); 
+                    a.download = `Aditya-14K-Video.webm`; a.click();
+                    btn.innerText = "🎬 Save Video (14K)"; btn.disabled = false;
+                };
+
+                let mic = document.getElementById('p-mic-audio');
+                if(pAudio.src) { pAudio.currentTime = 0; pAudio.play(); }
+                if(mic.src) { mic.currentTime = 0; mic.play(); }
+                isPPlaying = true; drawPhotoFrame(); recorder.start();
+
+                setTimeout(() => { 
+                    if(recorder.state === 'recording') { 
+                        recorder.stop(); 
+                        if(pAudio.src) pAudio.pause(); 
+                        if(mic.src) mic.pause(); 
+                    } 
+                }, (parseFloat(document.getElementById('p-duration').value) || 10) * 1000);
+            } catch(err) {
+                alert("14K Export failed! Browser memory limit exceeded.");
+                btn.innerText = "🎬 Save Video (14K)"; btn.disabled = false;
+            }
+        });
+
+        // ================= VIDEO MODE =================
+        const vCanvas = document.getElementById('v-canvas'); const vCtx = vCanvas.getContext('2d');
+        const vVideo = document.getElementById('v-video');
+        let vAudio = new Audio(), vSticker = new Image();
+        let isVPlaying = false;
+
+        document.getElementById('v-upload').addEventListener('change', (e) => {
+            if (e.target.files[0]) { vVideo.src = URL.createObjectURL(e.target.files[0]); vCanvas.style.display = "block"; document.getElementById('v-export').disabled = false; }
+        });
+        vVideo.addEventListener('loadedmetadata', () => {
+            setVQuality(); document.getElementById('v-progress').max = vVideo.duration; document.getElementById('v-end').value = vVideo.duration.toFixed(2); drawVideoFrame();
+        });
+        document.getElementById('v-audio').addEventListener('change', (e) => {
+            if (e.target.files[0]) { vAudio.src = URL.createObjectURL(e.target.files[0]); vVideo.muted = true; }
+        });
+        document.getElementById('v-sticker').addEventListener('change', (e) => {
+            if (e.target.files[0]) { vSticker.src = URL.createObjectURL(e.target.files[0]); vSticker.onload = () => drawVideoFrame(); }
+        });
+
+        document.getElementById('v-quality').addEventListener('change', setVQuality);
+        function setVQuality() {
+            if (!vVideo.src) return;
+            const q = document.getElementById('v-quality').value;
+            if (q === '16:9') { vCanvas.width = 1280; vCanvas.height = 720; }
+            else if (q === '1080p') { vCanvas.width = 1920; vCanvas.height = 1080; }
+            else if (q === 'shorts') { vCanvas.width = 720; vCanvas.height = 1280; }
+            else if (q === '2k') { vCanvas.width = 2560; vCanvas.height = 1440; }
+            else if (q === '4k') { vCanvas.width = 3840; vCanvas.height = 2160; }
+            else if (q === '8k') { vCanvas.width = 7680; vCanvas.height = 4320; }
+            else if (q === '14k') { vCanvas.width = 14336; vCanvas.height = 8064; }
+            else { vCanvas.width = vVideo.videoWidth; vCanvas.height = vVideo.videoHeight; }
+            if (vVideo.paused) drawVideoFrame();
+        }
+
+        document.getElementById('v-play').addEventListener('click', () => {
+            if (!vVideo.src) return;
+            initAudioEngine(vAudio); 
+            let mic = document.getElementById('v-mic-audio');
+            if (vVideo.paused) {
+                let startT = parseFloat(document.getElementById('v-start').value) || 0;
+                if(vVideo.currentTime < startT) vVideo.currentTime = startT;
+                vVideo.play(); if(vAudio.src) vAudio.play(); if(mic.src) mic.play();
+                isVPlaying = true; document.getElementById('v-play').innerText = "⏸ Pause"; drawVideoFrame();
+            } else {
+                vVideo.pause(); if(vAudio.src) vAudio.pause(); if(mic.src) mic.pause();
+                isVPlaying = false; document.getElementById('v-play').innerText = "▶ Play";
+            }
+        });
+
+        document.getElementById('v-progress').addEventListener('input', (e) => {
+            vVideo.currentTime = e.target.value; if(vAudio.src) vAudio.currentTime = e.target.value; if(vVideo.paused) drawVideoFrame();
+        });
+
+        ['v-shape','v-st-size','v-st-x','v-st-y','v-spectrum','v-spec-color','v-trim-mode'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => { if(vVideo.paused) drawVideoFrame(); });
+        });
+
+        function drawVideoFrame() {
+            if (!vVideo.src) return;
+            let endT = parseFloat(document.getElementById('v-end').value) || vVideo.duration;
+            let startT = parseFloat(document.getElementById('v-start').value) || 0;
+            let mode = document.getElementById('v-trim-mode').value;
+
+            if (mode === 'keep') {
+                if (vVideo.currentTime >= endT && isVPlaying) {
+                    vVideo.pause(); if(vAudio.src) vAudio.pause();
+                    let mic = document.getElementById('v-mic-audio'); if(mic.src) mic.pause();
+                    isVPlaying = false; document.getElementById('v-play').innerText = "▶ Play"; vVideo.currentTime = startT; return;
+                }
+            } else if (mode === 'delete') {
+                if (vVideo.currentTime >= startT && vVideo.currentTime < endT && isVPlaying) {
+                    vVideo.currentTime = endT;
+                    if(vAudio.src) vAudio.currentTime = endT;
+                    let mic = document.getElementById('v-mic-audio'); if(mic.src) mic.currentTime = endT;
+                }
+                if (vVideo.currentTime >= vVideo.duration && isVPlaying) {
+                    vVideo.pause(); if(vAudio.src) vAudio.pause();
+                    let mic = document.getElementById('v-mic-audio'); if(mic.src) mic.pause();
+                    isVPlaying = false; document.getElementById('v-play').innerText = "▶ Play"; vVideo.currentTime = 0; return;
+                }
+            }
+
+            vCtx.fillStyle = "#000"; vCtx.fillRect(0, 0, vCanvas.width, vCanvas.height);
+            const ratio = Math.max(vCanvas.width / vVideo.videoWidth, vCanvas.height / vVideo.videoHeight);
+            const w = vVideo.videoWidth * ratio; const h = vVideo.videoHeight * ratio;
+            vCtx.drawImage(vVideo, 0, 0, vVideo.videoWidth, vVideo.videoHeight, (vCanvas.width - w)/2, (vCanvas.height - h)/2, w, h);
+            
+            const shape = document.getElementById('v-shape').value;
+            if (vSticker.src) {
+                vCtx.save();
+                const sSize = parseInt(document.getElementById('v-st-size').value);
+                const xPos = (parseInt(document.getElementById('v-st-x').value) / 100) * vCanvas.width;
+                const yPos = (parseInt(document.getElementById('v-st-y').value) / 100) * vCanvas.height;
+                drawShape(vCtx, shape, xPos, yPos, sSize); vCtx.clip(); vCtx.drawImage(vSticker, xPos, yPos, sSize, sSize); vCtx.restore();
+            }
+
+            if (document.getElementById('v-spectrum').value === 'on' && analyser && isVPlaying && vAudio.src) {
+                analyser.getByteFrequencyData(dataArray);
+                let numBars = 32; let spacing = 6;
+                let sqSize = Math.max(2, Math.floor(vCanvas.width / numBars) - spacing);
+                vCtx.fillStyle = document.getElementById('v-spec-color').value;
+
+                for (let i = 0; i < numBars; i++) {
+                    let freq = dataArray[i]; let numBlocks = Math.floor((freq / 255) * 8); 
+                    for (let j = 0; j < numBlocks; j++) {
+                        let x = i * (sqSize + spacing) + (spacing / 2); let y = vCanvas.height - (j * (sqSize + spacing)) - sqSize - 20;
+                        drawShape(vCtx, shape, x, y, sqSize); vCtx.fill();
+                    }
+                }
+            }
+            document.getElementById('v-progress').value = vVideo.currentTime;
+            if (isVPlaying && !vVideo.ended) requestAnimationFrame(drawVideoFrame);
+        }
+
+        document.getElementById('v-export').addEventListener('click', () => {
+            if(!vVideo.src) return;
+            const btn = document.getElementById('v-export'); btn.innerText = "⏳ 14K Exporting..."; btn.disabled = true;
+            initAudioEngine(vAudio); drawVideoFrame(); saveMemory('Video', vCanvas);
+
+            try {
+                const stream = vCanvas.captureStream(30);
+                const recorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp8' });
+                let chunks = []; 
+                recorder.ondataavailable = e => chunks.push(e.data);
+                recorder.onstop = () => {
+                    const a = document.createElement('a'); 
+                    a.href = URL.createObjectURL(new Blob(chunks, { type: 'video/webm' }));
+                    a.download = `Aditya-14K-Edited-Video.webm`; a.click();
+                    btn.innerText = "💾 Export 14K Video"; btn.disabled = false;
+                };
+
+                let mic = document.getElementById('v-mic-audio');
+                let mode = document.getElementById('v-trim-mode').value;
+                
+                vVideo.currentTime = mode === 'keep' ? (parseFloat(document.getElementById('v-start').value) || 0) : 0;
+                if(vAudio.src) vAudio.currentTime = vVideo.currentTime;
+                if(mic.src) mic.currentTime = vVideo.currentTime;
+                
+                vVideo.play(); if(vAudio.src) vAudio.play(); if(mic.src) mic.play();
+                isVPlaying = true; drawVideoFrame(); recorder.start();
+
+                const check = setInterval(() => {
+                    let endT = parseFloat(document.getElementById('v-end').value) || vVideo.duration;
+                    let startT = parseFloat(document.getElementById('v-start').value) || 0;
+                    let currentMode = document.getElementById('v-trim-mode').value;
+
+                    if (currentMode === 'delete') {
+                        if (vVideo.currentTime >= startT && vVideo.currentTime < endT) {
+                            vVideo.currentTime = endT;
+                            if(vAudio.src) vAudio.currentTime = endT;
+                            if(mic.src) mic.currentTime = endT;
+                        }
+                        if (vVideo.currentTime >= vVideo.duration || vVideo.ended) {
+                            recorder.stop(); vVideo.pause(); if(vAudio.src) vAudio.pause(); if(mic.src) mic.pause();
+                            isVPlaying = false; document.getElementById('v-play').innerText = "▶ Play";
+                            clearInterval(check);
+                        }
+                    } else {
+                        if (vVideo.currentTime >= endT) {
+                            recorder.stop(); vVideo.pause(); if(vAudio.src) vAudio.pause(); if(mic.src) mic.pause();
+                            isVPlaying = false; document.getElementById('v-play').innerText = "▶ Play";
+                            clearInterval(check);
+                        }
+                    }
+                }, 50);
+            } catch(err) {
+                alert("14K Export error! Resolution too high for browser memory.");
+                btn.innerText = "💾 Export 14K Video"; btn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
